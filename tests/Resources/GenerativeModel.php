@@ -61,6 +61,32 @@ test('with generation config', function () {
         ->generationConfig->toBe($generationConfig);
 });
 
+test('with generation config and additional configurations', function () {
+    $modelType = ModelType::GEMINI_PRO;
+    $client = mockClient(method: Method::POST, endpoint: "{$modelType->value}:generateContent", response: GenerateContentResponse::fake(), times: 0);
+
+    $generationConfig = new GenerationConfig(
+        stopSequences: [
+            'Title',
+        ],
+        maxOutputTokens: 800,
+        temperature: 1,
+        topP: 0.8,
+        topK: 10
+    );
+
+    $generationConfig->additional([
+        'foo' => 'bar',
+    ]);
+
+    $generativeModel = $client
+        ->generativeModel(model: $modelType)
+        ->withGenerationConfig($generationConfig);
+
+    expect($generativeModel)
+        ->generationConfig->toBe($generationConfig);
+});
+
 test('count tokens', function () {
     $modelType = ModelType::GEMINI_PRO;
     $client = mockClient(method: Method::POST, endpoint: "{$modelType->value}:countTokens", response: CountTokensResponse::fake());

@@ -28,7 +28,20 @@ final class GenerationConfig implements Arrayable
         public readonly ?float $temperature = null,
         public readonly ?float $topP = null,
         public readonly ?int $topK = null,
-    ) {
+    ) {}
+
+    protected array $additional = [];
+
+    /**
+     * Set additional data that should be added to generation config.
+     *
+     * @return $this
+     */
+    public function additional(array $additional): static
+    {
+        $this->additional = $additional;
+
+        return $this;
     }
 
     public function toArray(): array
@@ -40,6 +53,7 @@ final class GenerationConfig implements Arrayable
             'temperature' => $this->temperature,
             'topP' => $this->topP,
             'topK' => $this->topK,
+            ...$this->additional,
         ];
     }
 }
