@@ -19,6 +19,7 @@ class GenerateContentRequest extends Request
     use HasJsonBody;
 
     protected Method $method = Method::POST;
+    protected array $additional = [];
 
     /**
      * @param  array<string|Blob|array<string|Blob>|Content>  $parts
@@ -31,6 +32,18 @@ class GenerateContentRequest extends Request
         protected readonly ?GenerationConfig $generationConfig = null
     ) {
 
+    }
+
+    /**
+     * Set additional body data
+     *
+     * @param  array<string, mixed>  $additional
+     */
+    public function additional(array $additional): static
+    {
+        $this->additional = $additional;
+
+        return $this;
     }
 
     public function resolveEndpoint(): string
@@ -55,6 +68,7 @@ class GenerateContentRequest extends Request
                 $this->safetySettings ?? []
             ),
             'generationConfig' => $this->generationConfig?->toArray(),
+            ...$this->additional,
         ];
     }
 }

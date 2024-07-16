@@ -12,6 +12,7 @@ use Gemini\Transporters\HttpTransporter;
 use GuzzleHttp\Exception\ConnectException;
 use GuzzleHttp\Psr7\Request as Psr7Request;
 use GuzzleHttp\Psr7\Response;
+use GuzzleHttp\Psr7\Stream;
 use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
@@ -28,7 +29,7 @@ beforeEach(function () {
         queryParams: [
             'foo' => 'bar',
         ],
-        streamHandler: fn (RequestInterface $request): ResponseInterface => $this->client->sendAsyncRequest($request, ['stream' => true]),
+        streamHandler: fn(RequestInterface $request): ResponseInterface => $this->client->sendAsyncRequest($request, ['stream' => true]),
 
     );
 });
@@ -89,7 +90,7 @@ test('request server user errors', function () {
         ->once()
         ->andReturn($response);
 
-    expect(fn () => $this->http->request($request))
+    expect(fn() => $this->http->request($request))
         ->toThrow(function (ErrorException $e) {
             expect($e->getMessage())->toBe('API key not valid. Please pass a valid API key.')
                 ->and($e->getErrorMessage())->toBe('API key not valid. Please pass a valid API key.')
@@ -117,13 +118,38 @@ test('request server errors', function () {
         ->once()
         ->andReturn($response);
 
-    expect(fn () => $this->http->request($request))
+    expect(fn() => $this->http->request($request))
         ->toThrow(function (ErrorException $e) {
             expect($e->getMessage())->toBe('Invalid JSON payload received. Unknown name \"contents2\": Cannot find field.')
                 ->and($e->getErrorMessage())->toBe('Invalid JSON payload received. Unknown name \"contents2\": Cannot find field.')
                 ->and($e->getErrorCode())->toBe(400)
                 ->and($e->getErrorStatus())->toBe('INVALID_ARGUMENT');
         });
+});
+
+test('request additional body params', function () {
+    $request = new GenerateContentRequest(
+        model: ModelType::GEMINI_PRO->value,
+        parts: ['Test']
+    );
+
+    $request->additional([
+        'foo' => 'bar',
+    ]);
+
+    $this->client
+        ->shouldReceive('sendRequest')
+        ->withArgs(function (Psr7Request $request) {
+            expect($request->getBody()->getContents())->json()->toHaveKey('foo', 'bar');
+
+            return true;
+        })
+        ->andReturn(new Response(200, ['Content-Type' => 'application/json; charset=utf-8'], json_encode([
+            'test',
+        ])))
+        ->once();
+
+    $this->http->request($request);
 });
 
 test('request client errors', function () {
@@ -134,7 +160,7 @@ test('request client errors', function () {
         ->once()
         ->andThrow(new ConnectException('Could not resolve host.', $request->toRequest(baseUrl: 'generativelanguage.googleapis.com')));
 
-    expect(fn () => $this->http->request($request))->toThrow(function (TransporterException $e) {
+    expect(fn() => $this->http->request($request))->toThrow(function (TransporterException $e) {
         expect($e->getMessage())->toBe('Could not resolve host.')
             ->and($e->getCode())->toBe(0)
             ->and($e->getPrevious())->toBeInstanceOf(ConnectException::class);
@@ -204,7 +230,7 @@ test('request stream server errors', function () {
         ->once()
         ->andReturn($response);
 
-    expect(fn () => $this->http->requestStream($request))
+    expect(fn() => $this->http->requestStream($request))
         ->toThrow(function (ErrorException $e) {
             expect($e->getMessage())->toBe('API key not valid. Please pass a valid API key.')
                 ->and($e->getErrorMessage())->toBe('API key not valid. Please pass a valid API key.')

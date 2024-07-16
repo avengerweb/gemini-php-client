@@ -19,22 +19,25 @@ use Gemini\Responses\GenerativeModel\CountTokensResponse;
 use Gemini\Responses\GenerativeModel\GenerateContentResponse;
 use Gemini\Responses\StreamResponse;
 use Gemini\Transporters\DTOs\ResponseDTO;
+use Pest\Support\Str;
 
 final class GenerativeModel implements GenerativeModelContract
 {
     use HasModel;
 
     private readonly string $model;
+    public array $additionalGenerationRequestParams = [];
 
     /**
-     * @param  array<SafetySetting>  $safetySettings
+     * @param array<SafetySetting> $safetySettings
      */
     public function __construct(
         private readonly TransporterContract $transporter,
-        ModelType|string $model,
-        public array $safetySettings = [],
-        public ?GenerationConfig $generationConfig = null,
-    ) {
+        ModelType|string                     $model,
+        public array                         $safetySettings = [],
+        public ?GenerationConfig             $generationConfig = null,
+    )
+    {
         $this->model = $this->parseModel(model: $model);
     }
 
@@ -52,12 +55,19 @@ final class GenerativeModel implements GenerativeModelContract
         return $this;
     }
 
+    public function withAdditionalGenerationRequestParams(array $additionalGenerationRequestParams): self
+    {
+        $this->additionalGenerationRequestParams = $additionalGenerationRequestParams;
+
+        return $this;
+    }
+
     /**
      * Runs a model's tokenizer on input content and returns the token count.
      *
      * @see https://ai.google.dev/api/rest/v1/models/countTokens
      *
-     * @param  string|Blob|array<string|Blob>|Content  ...$parts
+     * @param string|Blob|array<string|Blob>|Content ...$parts
      *
      * @throws \Exception
      */
@@ -76,14 +86,18 @@ final class GenerativeModel implements GenerativeModelContract
      */
     public function generateContent(string|Blob|array|Content ...$parts): GenerateContentResponse
     {
+        $request = new GenerateContentRequest(
+            model: $this->model,
+            parts: $parts,
+            safetySettings: $this->safetySettings,
+            generationConfig: $this->generationConfig,
+        );
+
+        $request->additional($this->additionalGenerationRequestParams);
+
         /** @var ResponseDTO<array{ candidates: ?array{ array{ content: array{ parts: array{ array{ text: ?string, inlineData: array{ mimeType: string, data: string } } }, role: string }, finishReason: string, safetyRatings: array{ array{ category: string, probability: string, blocked: ?bool } }, citationMetadata: ?array{ citationSources: array{ array{ startIndex: int, endIndex: int, uri: string, license: string} } }, index: int, tokenCount: ?int } }, promptFeedback: ?array{ safetyRatings: array{ array{ category: string, probability: string, blocked: ?bool } }, blockReason: ?string } }> $response */
         $response = $this->transporter->request(
-            request: new GenerateContentRequest(
-                model: $this->model,
-                parts: $parts,
-                safetySettings: $this->safetySettings,
-                generationConfig: $this->generationConfig,
-            )
+            request: $request
         );
 
         return GenerateContentResponse::from($response->data());
@@ -96,20 +110,24 @@ final class GenerativeModel implements GenerativeModelContract
      */
     public function streamGenerateContent(string|Blob|array|Content ...$parts): StreamResponse
     {
+        $request = new StreamGenerateContentRequest(
+            model: $this->model,
+            parts: $parts,
+            safetySettings: $this->safetySettings,
+            generationConfig: $this->generationConfig,
+        );
+
+        $request->additional($this->additionalGenerationRequestParams);
+
         $response = $this->transporter->requestStream(
-            request: new StreamGenerateContentRequest(
-                model: $this->model,
-                parts: $parts,
-                safetySettings: $this->safetySettings,
-                generationConfig: $this->generationConfig,
-            )
+            request: $request
         );
 
         return new StreamResponse(responseClass: GenerateContentResponse::class, response: $response);
     }
 
     /**
-     * @param  array<Content>  $history
+     * @param array<Content> $history
      */
     public function startChat(array $history = []): ChatSession
     {

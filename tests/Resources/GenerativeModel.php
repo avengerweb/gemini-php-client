@@ -1,5 +1,6 @@
 <?php
 
+use Gemini\Contracts\TransporterContract;
 use Gemini\Data\Candidate;
 use Gemini\Data\GenerationConfig;
 use Gemini\Data\PromptFeedback;
@@ -8,12 +9,15 @@ use Gemini\Enums\HarmBlockThreshold;
 use Gemini\Enums\HarmCategory;
 use Gemini\Enums\Method;
 use Gemini\Enums\ModelType;
+use Gemini\Requests\GenerativeModel\GenerateContentRequest;
 use Gemini\Resources\ChatSession;
 use Gemini\Responses\GenerativeModel\CountTokensResponse;
 use Gemini\Responses\GenerativeModel\GenerateContentResponse;
 use Gemini\Responses\StreamResponse;
+use Gemini\Transporters\DTOs\ResponseDTO;
 use GuzzleHttp\Psr7\Response;
 use GuzzleHttp\Psr7\Stream;
+use Psr\Http\Message\ResponseInterface;
 
 test('with safety setting', function () {
     $modelType = ModelType::GEMINI_PRO;
@@ -61,7 +65,7 @@ test('with generation config', function () {
         ->generationConfig->toBe($generationConfig);
 });
 
-test('with generation config and additional configurations', function () {
+test('with generation config and additional generation configurations', function () {
     $modelType = ModelType::GEMINI_PRO;
     $client = mockClient(method: Method::POST, endpoint: "{$modelType->value}:generateContent", response: GenerateContentResponse::fake(), times: 0);
 
@@ -83,8 +87,49 @@ test('with generation config and additional configurations', function () {
         ->generativeModel(model: $modelType)
         ->withGenerationConfig($generationConfig);
 
-    expect($generativeModel)
-        ->generationConfig->toBe($generationConfig);
+    expect($generativeModel->generationConfig->toArray())
+        ->toBe($generationConfig->toArray())
+        ->toHaveKey('foo', 'bar');
+});
+
+test('generate with additional body params', function () {
+    $modelType = ModelType::GEMINI_PRO;
+    $transport = Mockery::mock(TransporterContract::class);
+    $client = new Gemini\Client(transporter: $transport);
+
+    $generativeModel = $client
+        ->generativeModel(model: $modelType)
+        ->withAdditionalGenerationRequestParams([
+            'foo' => 'bar',
+        ]);
+
+    $transport->shouldReceive('request')
+        ->withArgs(function ($request) {
+            expect($request->body())->toHaveKey('foo', 'bar');
+            return true;
+        })->andReturn(new ResponseDTO(data: []));
+
+    $generativeModel->generateContent('Test');
+});
+
+test('generate stream with additional params', function () {
+    $modelType = ModelType::GEMINI_PRO;
+    $transport = Mockery::mock(TransporterContract::class);
+    $client = new Gemini\Client(transporter: $transport);
+
+    $generativeModel = $client
+        ->generativeModel(model: $modelType)
+        ->withAdditionalGenerationRequestParams([
+            'foo' => 'bar',
+        ]);
+
+    $transport->shouldReceive('requestStream')
+        ->withArgs(function ($request) {
+            expect($request->body())->toHaveKey('foo', 'bar');
+            return true;
+        })->andReturn(mock(ResponseInterface::class));
+
+    $generativeModel->streamGenerateContent('Test');
 });
 
 test('count tokens', function () {
