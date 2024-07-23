@@ -8,4 +8,5 @@ enum Role: string
 {
     case USER = 'user';
     case MODEL = 'model';
+    case FUNCTION = 'function';
 }

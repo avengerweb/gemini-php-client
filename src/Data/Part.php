@@ -18,17 +18,26 @@ final class Part implements Arrayable
     public function __construct(
         public readonly ?string $text = null,
         public readonly ?Blob $inlineData = null,
+        public readonly ?array $functionCall = null,
+        public readonly ?array $functionResponse = null
     ) {
     }
 
     /**
-     * @param  array{ text: ?string, inlineData: ?array{ mimeType: string, data: string } }  $attributes
+     * @param  array{ text: ?string, inlineData: ?array{ mimeType: string, data: string }, functionCall: ?array }  $attributes
      */
     public static function from(array $attributes): self
     {
+        $functionCall = $attributes['functionCall'] ?? null;
+        if ($functionCall !== null && is_array($functionCall['args']) && count($functionCall['args']) === 0){
+            $functionCall['args'] = new \stdClass();
+        }
+
         return new self(
             text: $attributes['text'] ?? null,
-            inlineData: isset($attributes['inlineData']) ? Blob::from($attributes['inlineData']) : null
+            inlineData: isset($attributes['inlineData']) ? Blob::from($attributes['inlineData']) : null,
+            functionCall: $functionCall,
+            functionResponse: isset($attributes['functionResponse']) ? $attributes['functionResponse'] : null
         );
     }
 
@@ -42,6 +51,14 @@ final class Part implements Arrayable
 
         if ($this->inlineData !== null) {
             $data['inlineData'] = $this->inlineData;
+        }
+
+        if ($this->functionCall !== null) {
+            $data['functionCall'] = $this->functionCall;
+        }
+
+        if ($this->functionResponse !== null) {
+            $data['functionResponse'] = $this->functionResponse;
         }
 
         return $data;
