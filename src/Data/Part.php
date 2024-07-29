@@ -30,7 +30,7 @@ final class Part implements Arrayable
     {
         $functionCall = $attributes['functionCall'] ?? null;
         if ($functionCall !== null && is_array($functionCall['args']) && count($functionCall['args']) === 0){
-            $functionCall['args'] = new \stdClass();
+            $functionCall['args'] = null;
         }
 
         return new self(
