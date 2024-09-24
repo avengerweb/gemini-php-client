@@ -19,7 +19,8 @@ final class Part implements Arrayable
         public readonly ?string $text = null,
         public readonly ?Blob $inlineData = null,
         public readonly ?array $functionCall = null,
-        public readonly ?array $functionResponse = null
+        public readonly ?array $functionResponse = null,
+        public readonly ?array $fileData = null
     ) {
     }
 
@@ -37,7 +38,8 @@ final class Part implements Arrayable
             text: $attributes['text'] ?? null,
             inlineData: isset($attributes['inlineData']) ? Blob::from($attributes['inlineData']) : null,
             functionCall: $functionCall,
-            functionResponse: isset($attributes['functionResponse']) ? $attributes['functionResponse'] : null
+            functionResponse: isset($attributes['functionResponse']) ? $attributes['functionResponse'] : null,
+            fileData: isset($attributes['fileData']) ? $attributes['fileData'] : null
         );
     }
 
@@ -59,6 +61,10 @@ final class Part implements Arrayable
 
         if ($this->functionResponse !== null) {
             $data['functionResponse'] = $this->functionResponse;
+        }
+
+        if ($this->fileData !== null) {
+            $data['file_data'] = $this->fileData;
         }
 
         return $data;
