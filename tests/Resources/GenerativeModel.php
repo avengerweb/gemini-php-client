@@ -5,6 +5,7 @@ use Gemini\Data\Candidate;
 use Gemini\Data\GenerationConfig;
 use Gemini\Data\PromptFeedback;
 use Gemini\Data\SafetySetting;
+use Gemini\Data\UsageMetadata;
 use Gemini\Enums\HarmBlockThreshold;
 use Gemini\Enums\HarmCategory;
 use Gemini\Enums\Method;
@@ -163,7 +164,8 @@ test('generate content', function () {
     expect($result)
         ->toBeInstanceOf(GenerateContentResponse::class)
         ->candidates->toBeArray()->each->toBeInstanceOf(Candidate::class)
-        ->promptFeedback->toBeInstanceOf(PromptFeedback::class);
+        ->promptFeedback->toBeInstanceOf(PromptFeedback::class)
+        ->usageMetadata->toBeInstanceOf(UsageMetadata::class);
 });
 
 test('generate content for custom model', function () {
@@ -175,7 +177,8 @@ test('generate content for custom model', function () {
     expect($result)
         ->toBeInstanceOf(GenerateContentResponse::class)
         ->candidates->toBeArray()->each->toBeInstanceOf(Candidate::class)
-        ->promptFeedback->toBeInstanceOf(PromptFeedback::class);
+        ->promptFeedback->toBeInstanceOf(PromptFeedback::class)
+        ->usageMetadata->toBeInstanceOf(UsageMetadata::class);
 });
 
 test('stream generate content', function () {
@@ -197,9 +200,9 @@ test('stream generate content', function () {
         ->toBeInstanceOf(Iterator::class)
         ->and($result->getIterator()->current())
         ->toBeInstanceOf(GenerateContentResponse::class)
-        ->toBeInstanceOf(GenerateContentResponse::class)
         ->candidates->toBeArray()->each->toBeInstanceOf(Candidate::class)
-        ->promptFeedback->toBeInstanceOf(PromptFeedback::class);
+        ->promptFeedback->toBeInstanceOf(PromptFeedback::class)
+        ->usageMetadata->toBeInstanceOf(UsageMetadata::class);
 
 });
 
@@ -222,10 +225,9 @@ test('stream generate content for custom model', function () {
         ->toBeInstanceOf(Iterator::class)
         ->and($result->getIterator()->current())
         ->toBeInstanceOf(GenerateContentResponse::class)
-        ->toBeInstanceOf(GenerateContentResponse::class)
         ->candidates->toBeArray()->each->toBeInstanceOf(Candidate::class)
-        ->promptFeedback->toBeInstanceOf(PromptFeedback::class);
-
+        ->promptFeedback->toBeInstanceOf(PromptFeedback::class)
+        ->usageMetadata->toBeInstanceOf(UsageMetadata::class);
 });
 
 test('start chat', function () {

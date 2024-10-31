@@ -23,10 +23,8 @@ final class CitationSource implements Arrayable
         public readonly int $startIndex,
         public readonly int $endIndex,
         public readonly string $uri,
-        public readonly string $license,
-    ) {
-
-    }
+        public readonly ?string $license,
+    ) {}
 
     /**
      * @param  array{ startIndex: int, endIndex: int, uri: string, license: string}  $attributes

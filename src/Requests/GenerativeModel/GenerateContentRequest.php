@@ -30,9 +30,7 @@ class GenerateContentRequest extends Request
         protected readonly array $parts,
         protected readonly array $safetySettings = [],
         protected readonly ?GenerationConfig $generationConfig = null
-    ) {
-
-    }
+    ) {}
 
     /**
      * Set additional body data

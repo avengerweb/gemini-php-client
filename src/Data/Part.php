@@ -21,8 +21,7 @@ final class Part implements Arrayable
         public readonly ?array $functionCall = null,
         public readonly ?array $functionResponse = null,
         public readonly ?array $fileData = null
-    ) {
-    }
+    ) {}
 
     /**
      * @param  array{ text: ?string, inlineData: ?array{ mimeType: string, data: string }, functionCall: ?array }  $attributes
